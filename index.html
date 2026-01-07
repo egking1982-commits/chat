@@ -3,94 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ملتقى الحياة - نسخة Firebase Live</title>
+    <title>ملتقى الحياة - تسجيل مفتوح</title>
     <style>
         :root { --main: #d63384; --dark: #2c3e50; --sent: #dcf8c6; --bg: #e5ddd5; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; overflow: hidden; touch-action: manipulation; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; overflow: hidden; }
         
-        /* واجهة الدخول */
         .auth-container { background: white; width: 85%; max-width: 350px; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .auth-container input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .auth-container input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
         
-        /* واجهة الشات */
+        .btn-main { width: 100%; padding: 12px; background: var(--main); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background: none; color: var(--main); border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 14px; }
+
         #chat-app { display: none; height: 100%; width: 100%; flex-direction: column; background: white; }
-        .mobile-header { background: var(--main); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; z-index: 10; }
-        
+        .mobile-header { background: var(--main); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; }
         .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
-        .msg-wrapper { max-width: 85%; display: flex; flex-direction: column; position: relative; }
+        .msg-wrapper { max-width: 85%; display: flex; flex-direction: column; }
         .sent { align-self: flex-start; }
         .received { align-self: flex-end; }
-        
-        .bubble { padding: 10px 14px; border-radius: 18px; background: white; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; word-wrap: break-word; }
+        .bubble { padding: 10px 14px; border-radius: 18px; background: white; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
         .sent .bubble { background: var(--sent); border-top-right-radius: 4px; }
         .received .bubble { border-top-left-radius: 4px; }
         
-        .msg-info { font-size: 10px; color: #888; margin-top: 4px; padding: 0 5px; }
-
-        /* شريط الإدخال */
-        .input-area { background: white; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #ddd; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        .msg-input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ddd; outline: none; font-size: 16px; -webkit-appearance: none; }
-        .icon { font-size: 26px; cursor: pointer; color: #555; padding: 5px; user-select: none; }
-
-        /* القائمة الجانبية */
-        #side-drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--dark); color: white; transition: 0.3s; z-index: 2000; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
-        
-        .rec-active { color: red !important; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
-        
-        .admin-section { background: #34495e; margin: 10px; padding: 15px; border-radius: 10px; font-size: 14px; }
-        .admin-section input { width: 100%; padding: 8px; margin: 5px 0; border-radius: 5px; border: none; font-size: 14px; }
-        .admin-btn { background: var(--main); color: white; border: none; width: 100%; padding: 10px; border-radius: 5px; margin-top: 5px; font-weight: bold; }
+        .input-area { background: white; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #ddd; }
+        .msg-input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="auth-container">
-        <h2 style="color:var(--main)">💞 ملتقى الحياة</h2>
+    <div id="auth-screen" class="auth-container">
+        <h2 id="auth-title" style="color:var(--main)">💞 تسجيل الدخول</h2>
         <input type="text" id="user-id" placeholder="اسم المستخدم">
         <input type="password" id="user-pass" placeholder="كلمة المرور">
-        <button id="loginBtn" style="width:100%; padding:12px; background:var(--main); color:white; border:none; border-radius:10px; font-size:16px; font-weight: bold;">دخول آمن</button>
+        
+        <button id="loginBtn" class="btn-main">دخول</button>
+        <button id="registerBtn" class="btn-main" style="display:none; background:#28a745;">إنشاء الحساب الآن</button>
+        
+        <button id="toggleAuth" class="btn-secondary">ليس لديك حساب؟ إنشاء حساب جديد</button>
     </div>
 
     <div id="chat-app">
         <div class="mobile-header">
-            <span id="openMenu" style="cursor:pointer; font-size:24px;">☰</span>
-            <span>دردشة مباشرة</span>
-            <div id="admin-indicator" style="display:none; font-size:10px; background:gold; color:black; padding:2px 5px; border-radius:4px;">ADMIN</div>
+            <span>ملتقى الحياة المباشر</span>
+            <span onclick="location.reload()" style="cursor:pointer">🚪 خروج</span>
         </div>
         <div class="messages" id="chatBox"></div>
         <div class="input-area">
-            <label class="icon">📎<input type="file" id="fInp" style="display:none"></label>
             <input type="text" id="tInp" class="msg-input" placeholder="اكتب رسالة..." enterkeyhint="send">
-            <span class="icon" id="micBtn">🎤</span>
-            <span class="icon" id="sendBtn" style="color:var(--main)">✈️</span>
+            <span id="sendBtn" style="font-size:26px; cursor:pointer; color:var(--main)">✈️</span>
         </div>
     </div>
-
-    <div id="side-drawer">
-        <div style="padding:20px; background:#1a252f;"><b>إعدادات الغرفة</b></div>
-        <div id="admin-tools" style="display: none;">
-            <div class="admin-section">
-                <b style="color: gold; display: block; margin-bottom: 5px;">👤 إضافة مستخدم جديد</b>
-                <input type="text" id="new-u" placeholder="الاسم">
-                <input type="text" id="new-p" placeholder="كلمة المرور">
-                <button class="admin-btn" id="saveUser">تأكيد الإضافة</button>
-            </div>
-        </div>
-        <div style="padding:15px; cursor: pointer;" onclick="location.reload()">🚪 تسجيل الخروج</div>
-    </div>
-    <div class="overlay" id="overlay"></div>
-
-    <audio id="snd-out" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
-    <audio id="snd-in" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // إعداداتك التي أرسلتها (مدمجة)
         const firebaseConfig = {
             apiKey: "AIzaSyClnZptClETDJK5VRGxY0jZXfTva4eTxBo",
             authDomain: "firechat-a2f3e.firebaseapp.com",
@@ -102,145 +68,85 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const storage = getStorage(app);
-
         let currentUser = "";
-        let isAdmin = false;
 
-        // الدخول
-        document.getElementById('loginBtn').onclick = async () => {
+        const authTitle = document.getElementById('auth-title');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const toggleBtn = document.getElementById('toggleAuth');
+
+        // التبديل بين الدخول وإنشاء الحساب
+        toggleBtn.onclick = () => {
+            if (loginBtn.style.display !== 'none') {
+                authTitle.innerText = "💞 حساب جديد";
+                loginBtn.style.display = 'none';
+                registerBtn.style.display = 'block';
+                toggleBtn.innerText = "لديك حساب بالفعل؟ سجل دخولك";
+            } else {
+                authTitle.innerText = "💞 تسجيل الدخول";
+                loginBtn.style.display = 'block';
+                registerBtn.style.display = 'none';
+                toggleBtn.innerText = "ليس لديك حساب؟ إنشاء حساب جديد";
+            }
+        };
+
+        // وظيفة إنشاء حساب جديد (متاحة للجميع)
+        registerBtn.onclick = async () => {
+            const u = document.getElementById('user-id').value.trim();
+            const p = document.getElementById('user-pass').value.trim();
+            if (!u || !p) return alert("اكمل البيانات");
+
+            const check = await get(child(ref(db), `users/${u}`));
+            if (check.exists()) return alert("اسم المستخدم موجود مسبقاً!");
+
+            await set(ref(db, 'users/' + u), { pass: p });
+            alert("تم إنشاء حسابك بنجاح! يمكنك الدخول الآن.");
+            toggleBtn.click(); // العودة لشاشة الدخول
+        };
+
+        // تسجيل الدخول
+        loginBtn.onclick = async () => {
             const u = document.getElementById('user-id').value.trim();
             const p = document.getElementById('user-pass').value.trim();
 
-            if(u === "admin" && p === "admin123") {
-                loginSuccess(u, true);
+            const snapshot = await get(child(ref(db), `users/${u}`));
+            if (snapshot.exists() && snapshot.val().pass === p) {
+                startChat(u);
             } else {
-                const snapshot = await get(child(ref(db), `users/${u}`));
-                if (snapshot.exists() && snapshot.val().pass === p) {
-                    loginSuccess(u, false);
-                } else {
-                    alert("البيانات غير صحيحة أو المستخدم غير مضاف");
-                }
+                alert("بيانات خاطئة");
             }
         };
 
-        function loginSuccess(user, adminStatus) {
+        function startChat(user) {
             currentUser = user;
-            isAdmin = adminStatus;
-            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('chat-app').style.display = 'flex';
-            if(isAdmin) {
-                document.getElementById('admin-indicator').style.display = 'block';
-                document.getElementById('admin-tools').style.display = 'block';
-            }
-            loadMessages();
+            
+            onChildAdded(ref(db, 'messages'), (snap) => {
+                const data = snap.val();
+                const box = document.getElementById('chatBox');
+                const isMe = data.sender === currentUser;
+                const wrap = document.createElement('div');
+                wrap.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
+                wrap.innerHTML = `
+                    <div style="font-size:10px; color:#888;">${data.sender}</div>
+                    <div class="bubble">${data.text}</div>
+                `;
+                box.appendChild(wrap);
+                box.scrollTop = box.scrollHeight;
+            });
         }
-
-        // إضافة مستخدم (للأدمن فقط)
-        document.getElementById('saveUser').onclick = () => {
-            const nu = document.getElementById('new-u').value.trim();
-            const np = document.getElementById('new-p').value.trim();
-            if(nu && np) {
-                set(ref(db, 'users/' + nu), { pass: np });
-                alert("تم تسجيل المستخدم بنجاح");
-                document.getElementById('new-u').value = "";
-                document.getElementById('new-p').value = "";
-            }
-        };
 
         // إرسال الرسائل
-        const tInp = document.getElementById('tInp');
-        const sendBtn = document.getElementById('sendBtn');
-
-        const pushMsg = (data) => {
-            push(ref(db, 'messages'), {
-                ...data,
-                sender: currentUser,
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-            });
-        };
-
-        sendBtn.onclick = () => {
-            if(tInp.value.trim()) {
-                pushMsg({ text: tInp.value, type: 'text' });
-                tInp.value = "";
-                tInp.focus();
+        document.getElementById('sendBtn').onclick = () => {
+            const t = document.getElementById('tInp');
+            if(t.value.trim()){
+                push(ref(db, 'messages'), {
+                    sender: currentUser,
+                    text: t.value
+                });
+                t.value = "";
             }
-        };
-
-        tInp.onkeypress = (e) => { if(e.key === "Enter") sendBtn.click(); };
-
-        // استقبال الرسائل لايف
-        function loadMessages() {
-            onChildAdded(ref(db, 'messages'), (snapshot) => {
-                displayMsg(snapshot.val());
-            });
-        }
-
-        function displayMsg(data) {
-            const box = document.getElementById('chatBox');
-            const isMe = data.sender === currentUser;
-            const wrap = document.createElement('div');
-            wrap.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
-            
-            let content = data.text;
-            if(data.type === 'image') content = `<img src="${data.url}" style="max-width:100%; border-radius:10px;">`;
-            if(data.type === 'audio') content = `<audio controls src="${data.url}" style="width:200px;"></audio>`;
-            if(data.type === 'file') content = `<a href="${data.url}" target="_blank">📄 ملف مرفق: ${data.name}</a>`;
-
-            wrap.innerHTML = `
-                <div class="msg-info">${data.sender}</div>
-                <div class="bubble">${content}</div>
-                <div class="msg-info">${data.time}</div>
-            `;
-            box.appendChild(wrap);
-            box.scrollTop = box.scrollHeight;
-            if(!isMe) document.getElementById('snd-in').play();
-            else document.getElementById('snd-out').play();
-        }
-
-        // رفع الملفات
-        document.getElementById('fInp').onchange = async (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-            const fileRef = sRef(storage, 'uploads/' + Date.now() + "_" + file.name);
-            const snap = await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(snap.ref);
-            const type = file.type.startsWith('image/') ? 'image' : 'file';
-            pushMsg({ type, url, name: file.name });
-        };
-
-        // تسجيل الصوت
-        let rec, chunks = [];
-        document.getElementById('micBtn').onclick = async function() {
-            if(this.classList.contains('rec-active')) {
-                rec.stop(); this.classList.remove('rec-active');
-            } else {
-                try {
-                    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    rec = new MediaRecorder(s);
-                    chunks = [];
-                    rec.ondataavailable = e => chunks.push(e.data);
-                    rec.onstop = async () => {
-                        const blob = new Blob(chunks, {type:'audio/ogg'});
-                        const fileRef = sRef(storage, 'voice/' + Date.now() + ".ogg");
-                        const snap = await uploadBytes(fileRef, blob);
-                        const url = await getDownloadURL(snap.ref);
-                        pushMsg({ type: 'audio', url });
-                    };
-                    rec.start(); this.classList.add('rec-active');
-                } catch(e) { alert("الميكروفون مطلوب"); }
-            }
-        };
-
-        // القوائم
-        document.getElementById('openMenu').onclick = () => {
-            document.getElementById('side-drawer').style.right = '0';
-            document.getElementById('overlay').style.display = 'block';
-        };
-        document.getElementById('overlay').onclick = () => {
-            document.getElementById('side-drawer').style.right = '-280px';
-            document.getElementById('overlay').style.display = 'none';
         };
     </script>
 </body>
