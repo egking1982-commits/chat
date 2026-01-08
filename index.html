@@ -8,7 +8,6 @@
         :root { --main: #d63384; --admin: #2c3e50; --sent: #dcf8c6; --bg: #e5ddd5; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; overflow: hidden; }
         
-        /* تنبيه ضوئي */
         @keyframes flash { 0% { background: var(--main); } 100% { background: white; } }
         .new-msg-flash { animation: flash 0.5s ease-in-out; }
 
@@ -21,15 +20,16 @@
         .mobile-header { background: var(--main); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; }
         .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
         
+        .msg-wrapper { max-width: 85%; display: flex; flex-direction: column; }
         .bubble { padding: 10px; border-radius: 15px; background: white; position: relative; min-width: 100px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .sent { align-self: flex-start; }
         .received { align-self: flex-end; }
         .sent .bubble { background: var(--sent); }
         
         .admin-tools { font-size: 11px; margin-top: 5px; display: flex; gap: 8px; border-top: 1px solid #eee; padding-top: 5px; }
-        .btn-del { color: red; cursor: pointer; }
-        .btn-ban { color: orange; cursor: pointer; }
-        .btn-edit { color: blue; cursor: pointer; margin-right: 5px; }
+        .btn-del { color: red; cursor: pointer; font-weight: bold; }
+        .btn-ban { color: orange; cursor: pointer; font-weight: bold; }
+        .btn-edit { color: blue; cursor: pointer; margin-right: 5px; font-weight: bold; }
 
         .input-area { background: white; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #ddd; }
         .msg-input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
@@ -42,22 +42,19 @@
         <h2 id="auth-title" style="color:var(--main)">🔐 ملتقى 2026</h2>
         <input type="text" id="user-id" placeholder="اسم المستخدم">
         <input type="password" id="user-pass" placeholder="كلمة المرور أو Pass Key">
-        
         <button id="loginBtn" class="btn-main">دخول آمن</button>
         <button id="registerBtn" class="btn-main" style="display:none; background:#28a745;">إنشاء الحساب الآن</button>
-        
         <button id="toggleAuth" class="btn-secondary">ليس لديك حساب؟ إنشاء حساب جديد</button>
-        <p id="status-text" style="font-size:11px; color:gray; margin-top:10px;">نظام الحماية والـ Pass Key نشط</p>
     </div>
 
     <div id="chat-app">
         <div id="header" class="mobile-header">
             <span id="user-tag">دردشة مباشرة</span>
-            <span onclick="location.reload()" style="cursor:pointer">🚪 خروج</span>
+            <span id="logoutBtn" style="cursor:pointer">🚪 خروج</span>
         </div>
         <div class="messages" id="chatBox"></div>
         <div class="input-area">
-            <span class="attach-btn" title="إرفاق ملف" onclick="alert('ميزة رفع الملفات تتطلب إعداد Firebase Storage')">📎</span>
+            <span class="attach-btn" title="إرفاق ملف" onclick="alert('سيتم إضافة ميزة الرفع قريباً')">📎</span>
             <input type="text" id="tInp" class="msg-input" placeholder="اكتب رسالة..." enterkeyhint="send">
             <button id="sendBtn" style="border:none; background:none; font-size:24px; cursor:pointer;">✈️</button>
         </div>
@@ -67,7 +64,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, set, get, child, remove, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, onChildRemoved, onChildChanged, set, get, child, remove, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAQoBgXB_Iq0Ga_UmJkwifQ7kqbHF1FGPY",
@@ -83,7 +80,7 @@
         let currentUser = "";
         let isAdmin = false;
 
-        // تبديل بين الدخول والتسجيل
+        // نظام تبديل الواجهات (دخول/تسجيل)
         const toggleBtn = document.getElementById('toggleAuth');
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
@@ -103,7 +100,7 @@
             }
         };
 
-        // وظيفة التسجيل
+        // إنشاء حساب
         registerBtn.onclick = async () => {
             const u = document.getElementById('user-id').value.trim();
             const p = document.getElementById('user-pass').value.trim();
@@ -115,7 +112,7 @@
             toggleBtn.click();
         };
 
-        // وظيفة الدخول مع Pass Key
+        // تسجيل الدخول
         loginBtn.onclick = async () => {
             const u = document.getElementById('user-id').value.trim();
             const p = document.getElementById('user-pass').value.trim();
@@ -123,7 +120,6 @@
             if (p === "2026") { 
                 isAdmin = true; 
                 currentUser = u + " (الأدمن) ⭐"; 
-                document.getElementById('header').style.background = "var(--admin)";
                 startApp();
             } else {
                 const snap = await get(child(ref(db), `users/${u}`));
@@ -139,49 +135,65 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('chat-app').style.display = 'flex';
             document.getElementById('user-tag').innerText = currentUser;
-            
-            onChildAdded(ref(db, 'messages'), (snap) => {
+            if(isAdmin) document.getElementById('header').style.background = "var(--admin)";
+            initChatListeners();
+        }
+
+        function initChatListeners() {
+            const msgsRef = ref(db, 'messages');
+
+            // رصد الإضافة (Real-time)
+            onChildAdded(msgsRef, (snap) => {
                 const data = snap.val();
-                const msgId = snap.key;
-                displayMessage(msgId, data);
+                const box = document.getElementById('chatBox');
+                const isMe = data.sender === currentUser;
                 
+                const div = document.createElement('div');
+                div.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
+                div.id = `msg-${snap.key}`;
+                
+                let tools = "";
+                if (isAdmin) tools += `<span class="btn-del" data-id="${snap.key}">🗑 حذف</span>`;
+                if (isAdmin && !isMe) tools += `<span class="btn-ban" data-user="${data.sender}">🚫 حظر</span>`;
+                if (isMe) tools += `<span class="btn-edit" data-id="${snap.key}" data-text="${data.text}">✏️ تعديل</span>`;
+
+                div.innerHTML = `
+                    <div style="font-size:10px; color:#666; margin-bottom:2px;">${data.sender}</div>
+                    <div class="bubble">
+                        <span id="text-${snap.key}">${data.text}</span>
+                        ${tools ? `<div class="admin-tools">${tools}</div>` : ''}
+                    </div>
+                `;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+
+                // التنبيهات
                 if (data.sender !== currentUser) {
                     document.getElementById('notifSound').play().catch(()=>{});
                     document.body.classList.add('new-msg-flash');
                     setTimeout(() => document.body.classList.remove('new-msg-flash'), 500);
                 }
+
+                // ربط الأزرار برمجياً لمنع الـ Reload
+                div.querySelectorAll('.btn-del').forEach(b => b.onclick = () => deleteMsg(b.dataset.id));
+                div.querySelectorAll('.btn-edit').forEach(b => b.onclick = () => editMsg(b.dataset.id, b.dataset.text));
+                div.querySelectorAll('.btn-ban').forEach(b => b.onclick = () => banUser(b.dataset.user));
+            });
+
+            // رصد الحذف (يختفي من الشاشة فوراً عند الجميع)
+            onChildRemoved(msgsRef, (snap) => {
+                const el = document.getElementById(`msg-${snap.key}`);
+                if (el) el.remove();
+            });
+
+            // رصد التعديل
+            onChildChanged(msgsRef, (snap) => {
+                const txtEl = document.getElementById(`text-${snap.key}`);
+                if (txtEl) txtEl.innerText = snap.val().text;
             });
         }
 
-        function displayMessage(id, data) {
-            const box = document.getElementById('chatBox');
-            const isMe = data.sender === currentUser;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
-            
-            let adminButtons = isAdmin ? `
-                <div class="admin-tools">
-                    <span class="btn-del" onclick="deleteMsg('${id}')">🗑 حذف</span>
-                    <span class="btn-ban" onclick="banUser('${data.sender}')">🚫 حظر</span>
-                </div>` : "";
-
-            let editButton = isMe ? `<span class="btn-edit" onclick="editMsg('${id}', '${data.text}')">✏️ تعديل</span>` : "";
-
-            msgDiv.innerHTML = `
-                <div style="font-size:10px; color:#666; margin-bottom:2px;">${data.sender}</div>
-                <div class="bubble">
-                    <span id="text-${id}">${data.text}</span>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        ${editButton}
-                    </div>
-                    ${adminButtons}
-                </div>
-            `;
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        // إرسال الرسالة
+        // إرسال رسالة
         document.getElementById('sendBtn').onclick = () => {
             const t = document.getElementById('tInp');
             if(t.value.trim()){
@@ -190,21 +202,32 @@
             }
         };
 
-        // تفعيل الإرسال بزر Enter
+        // دعم زر Enter
         document.getElementById('tInp').onkeypress = (e) => { if(e.key === 'Enter') document.getElementById('sendBtn').click(); };
 
-        // وظائف الإدارة العالمية
-        window.deleteMsg = (id) => { if(confirm("حذف الرسالة؟")) remove(ref(db, 'messages/' + id)).then(()=>location.reload()); };
-        window.banUser = async (user) => {
-            if(confirm(`حظر ${user} نهائياً؟`)) {
-                await update(ref(db, 'users/' + user), { isBanned: true });
-                alert("تم الحظر.");
+        // زر الخروج الفعلي
+        document.getElementById('logoutBtn').onclick = () => { if(confirm("هل تريد الخروج؟")) location.reload(); };
+
+        // الدوال الأساسية (بدون Reload)
+        async function deleteMsg(id) {
+            if(confirm("هل تريد حذف هذه الرسالة نهائياً؟")) {
+                await remove(ref(db, `messages/${id}`));
             }
-        };
-        window.editMsg = (id, old) => {
-            const n = prompt("تعديل الرسالة:", old);
-            if(n && n!==old) update(ref(db, 'messages/' + id), { text: n }).then(()=>location.reload());
-        };
+        }
+
+        async function editMsg(id, oldText) {
+            const newText = prompt("تعديل الرسالة:", oldText);
+            if(newText && newText !== oldText) {
+                await update(ref(db, `messages/${id}`), { text: newText });
+            }
+        }
+
+        async function banUser(user) {
+            if(confirm(`هل تريد حظر المستخدم ${user}؟`)) {
+                await update(ref(db, `users/${user}`), { isBanned: true });
+                alert("تم الحظر بنجاح.");
+            }
+        }
     </script>
 </body>
 </html>
