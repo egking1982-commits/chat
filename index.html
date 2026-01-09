@@ -75,7 +75,8 @@
 </head>
 <body>
 
-    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
+    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+    <audio id="sendSound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
 
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title" style="color:var(--main)">🔐 ملتقى 2026</h2>
@@ -136,6 +137,19 @@
         const db = getDatabase(app);
         let currentUser = "", cleanUserName = "", isAdmin = false;
 
+        // --- وظائف الصوت ---
+        const playReceiveSound = () => {
+            const sound = document.getElementById('msgSound');
+            sound.currentTime = 0;
+            sound.play().catch(() => {});
+        };
+
+        const playSendSound = () => {
+            const sound = document.getElementById('sendSound');
+            sound.currentTime = 0;
+            sound.play().catch(() => {});
+        };
+
         // --- نظام الدخول ---
         document.getElementById('toggleAuth').onclick = () => {
             const isLogin = document.getElementById('loginBtn').style.display !== 'none';
@@ -172,12 +186,6 @@
             return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
-        const playSound = () => {
-            const sound = document.getElementById('msgSound');
-            sound.currentTime = 0;
-            sound.play().catch(() => {});
-        };
-
         // --- تشغيل التطبيق ---
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
@@ -195,7 +203,6 @@
                 }
             });
 
-            // التأكد من أن حسابي لا يزال موجوداً (لم يتم حذفه من قبل أدمن آخر)
             onValue(ref(db, `users/${cleanUserName}`), (s) => {
                 if(!s.exists() && cleanUserName !== "") {
                     alert("عذراً، هذا الحساب لم يعد موجوداً.");
@@ -234,6 +241,9 @@
                 sender: currentUser, senderRaw: cleanUserName,
                 text: text, image: img, timestamp: Date.now()
             });
+            
+            playSendSound(); // تشغيل صوت عند الإرسال
+
             document.getElementById('tInp').value = "";
             set(ref(db, `users/${cleanUserName}/isTyping`), false);
         };
@@ -250,11 +260,19 @@
         function initChatListeners() {
             const mRef = ref(db, 'messages');
             let initialLoad = true;
+            
             onChildAdded(mRef, (s) => {
-                renderMessage(s.key, s.val());
-                if(!initialLoad && s.val().senderRaw !== cleanUserName) playSound();
+                const data = s.val();
+                renderMessage(s.key, data);
+                
+                // تشغيل صوت الاستقبال فقط للرسائل الجديدة ومن أشخاص آخرين
+                if(!initialLoad && data.senderRaw !== cleanUserName) {
+                    playReceiveSound();
+                }
             });
+
             get(mRef).then(() => { initialLoad = false; });
+
             onChildChanged(mRef, (s) => {
                 const el = document.getElementById(`msg-${s.key}`);
                 if(el) el.querySelector('.msg-text').innerText = s.val().text;
@@ -291,7 +309,7 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // --- وظائف الأدمن العالمية ---
+        // --- وظائف الإدارة ---
         window.delMsg = (id) => { if(confirm("حذف الرسالة؟")) remove(ref(db, `messages/${id}`)); };
         window.editMsg = (id, old) => {
             const n = prompt("تعديل الرسالة:", old);
@@ -305,11 +323,9 @@
                 await update(ref(db, `users/${u}`), { isBanned: !status });
             }
         };
-        // الميزة الجديدة: حذف الحساب
         window.deleteUser = async (u) => {
             if(confirm(`⚠️ تحذير: هل أنت متأكد من حذف حساب (${u}) نهائياً؟ سيتم طرده فوراً.`)) {
                 await remove(ref(db, `users/${u}`));
-                alert(`تم حذف الحساب ${u} بنجاح.`);
             }
         };
 
@@ -353,4 +369,3 @@
     </script>
 </body>
 </html>
-
