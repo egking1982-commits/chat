@@ -1,0 +1,24 @@
+{
+  "short_name": "ملتقى 2026",
+  "name": "ملتقى الحياة 2026 - لوحة التحكم",
+  "description": "تطبيق الدردشة والتحكم الكامل لعام 2026",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2592/2592317.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2592/2592317.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#d63384",
+  "background_color": "#f0f2f5",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar"
+}

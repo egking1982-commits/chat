@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ملتقى الحياة 2026 - نسخة الإدارة</title>
+    <title>ملتقى الحياة 2026 - لوحة التحكم الكاملة</title>
     
     <style>
         :root { --main: #d63384; --admin-color: #2c3e50; --sent: #dcf8c6; --bg: #e5ddd5; --header-h: 60px; --input-h: 70px; }
@@ -28,52 +28,61 @@
 
         /* تطبيق الدردشة */
         #chat-app { display: none; flex: 1; flex-direction: column; background: white; height: 100%; }
-        .mobile-header { height: var(--header-h); background: var(--main); color: white; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; z-index: 10; }
+        .mobile-header { height: var(--header-h); background: var(--main); color: white; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; z-index: 10; position: relative; }
         
+        #typing-indicator { 
+            position: absolute; bottom: -20px; right: 20px; font-size: 11px; 
+            color: var(--main); background: rgba(255,255,255,0.9); 
+            padding: 2px 10px; border-radius: 10px; display: none; font-weight: normal;
+        }
+
+        /* القائمة الجانبية */
         .sidebar { width: 280px; background: #fff; position: absolute; right: -280px; height: 100%; transition: 0.3s; z-index: 20; box-shadow: -5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .sidebar.active { right: 0; }
         .user-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .user-item { padding: 12px; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; gap: 10px; }
         
-        .user-item { padding: 12px; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
         .status-online { background: #28a745; box-shadow: 0 0 5px #28a745; }
-        .banned-text { color: red; font-size: 10px; font-weight: bold; }
 
         /* منطقة الرسائل */
-        .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
+        .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); position: relative; }
         .bubble { padding: 12px; border-radius: 18px; background: white; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
         .sent { align-self: flex-start; }
         .received { align-self: flex-end; background: var(--sent); }
         .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
+        .msg-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 10px; opacity: 0.7; }
+
+        /* أزرار الإدارة */
+        .admin-action-bar { background: rgba(255,255,255,0.8); padding: 5px 15px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #ddd; }
+        .clear-btn { color: #ff4444; font-weight: bold; cursor: pointer; border: 1px solid #ff4444; padding: 2px 8px; border-radius: 5px; }
+        .admin-tools { font-size: 11px; display: flex; gap: 12px; border-top: 1px solid #eee; padding-top: 5px; }
+        .admin-tools span { cursor: pointer; color: var(--main); font-weight: bold; }
+        
+        /* أزرار قائمة المستخدمين */
+        .btn-group { display: flex; flex-direction: column; gap: 4px; }
+        .ban-btn { background: #ffc107; color: #000; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+        .unban-btn { background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+        .delete-user-btn { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; }
 
         /* منطقة الإدخال */
-        .input-area { 
-            background: white; padding: 10px; display: flex; align-items: center; gap: 8px; 
-            border-top: 1px solid #eee; min-height: var(--input-h);
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
-        }
+        .input-area { background: white; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #eee; min-height: var(--input-h); padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
         .msg-input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; }
-        
         #sendBtn { background: var(--main); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 15; }
         .overlay.active { display: block; }
-
-        /* أدوات الأدمن */
-        .admin-tools { font-size: 12px; margin-top: 8px; display: flex; gap: 15px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 5px; color: #555; }
-        .admin-tools span { cursor: pointer; color: #d63384; font-weight: bold; }
-        .ban-btn { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 5px; font-size: 10px; cursor: pointer; }
-        .unban-btn { background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 5px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
 
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title" style="color:var(--main)">🔐 ملتقى 2026</h2>
         <input type="text" id="user-id" placeholder="اسم المستخدم">
         <input type="password" id="user-pass" placeholder="كلمة المرور">
         <button id="loginBtn" class="btn-main">دخول آمن</button>
-        <button id="registerBtn" class="btn-main" style="display:none; background:#28a745;">إنشاء حساب جديد</button>
+        <button id="registerBtn" class="btn-main" style="display:none; background:#28a745;">تسجيل حساب جديد</button>
         <button id="toggleAuth" style="background:none; border:none; color:var(--main); margin-top:15px; text-decoration:underline;">ليس لديك حساب؟ سجل هنا</button>
     </div>
 
@@ -82,9 +91,15 @@
             <div class="mobile-header">
                 <div style="display:flex; align-items:center;">
                     <span id="menuBtn" style="font-size:24px; margin-left:10px; cursor:pointer;">☰</span>
-                    <span id="user-tag">جاري التحميل...</span>
+                    <span id="user-tag">...</span>
                 </div>
+                <div id="typing-indicator">جاري الكتابة... ✍️</div>
                 <span id="logoutBtn" style="font-size:14px; cursor:pointer;">🚪 خروج</span>
+            </div>
+
+            <div id="adminBar" class="admin-action-bar" style="display:none;">
+                <span style="color:#666;">لوحة تحكم الأدمن</span>
+                <span class="clear-btn" onclick="window.clearAllMessages()">🧹 مسح كافة الرسائل</span>
             </div>
             
             <div class="messages" id="chatBox"></div>
@@ -92,14 +107,14 @@
             <div class="input-area">
                 <label for="fileInput" style="font-size:24px; cursor:pointer;">📎</label>
                 <input type="file" id="fileInput" hidden accept="image/*">
-                <input type="text" id="tInp" class="msg-input" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+                <input type="text" id="tInp" class="msg-input" placeholder="اكتب رسالة..." autocomplete="off">
                 <button id="sendBtn">✈️</button>
             </div>
         </div>
 
         <div id="overlay" class="overlay"></div>
         <div id="sidebar" class="sidebar">
-            <div style="padding:20px; font-weight:bold; border-bottom:1px solid #eee; background:var(--main); color:white;">👥 قائمة المستخدمين</div>
+            <div style="padding:20px; font-weight:bold; border-bottom:1px solid #eee; background:var(--main); color:white;">👥 المتصلون</div>
             <div class="user-list" id="userList"></div>
         </div>
     </div>
@@ -119,9 +134,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let currentUser = "";
-        let cleanUserName = "";
-        let isAdmin = false;
+        let currentUser = "", cleanUserName = "", isAdmin = false;
 
         // --- نظام الدخول ---
         document.getElementById('toggleAuth').onclick = () => {
@@ -129,34 +142,40 @@
             document.getElementById('loginBtn').style.display = isLogin ? 'none' : 'block';
             document.getElementById('registerBtn').style.display = isLogin ? 'block' : 'none';
             document.getElementById('auth-title').innerText = isLogin ? "💞 حساب جديد" : "🔐 ملتقى 2026";
-            document.getElementById('toggleAuth').innerText = isLogin ? "لديك حساب؟ سجل دخول" : "ليس لديك حساب؟ سجل هنا";
         };
 
         document.getElementById('loginBtn').onclick = async () => {
             const u = document.getElementById('user-id').value.trim();
             const p = document.getElementById('user-pass').value.trim();
-            if(!u || !p) return alert("يرجى ملء البيانات");
+            if(!u || !p) return alert("أكمل البيانات");
 
             const snap = await get(child(ref(db), `users/${u}`));
-
             if (p === "2026") { 
                 isAdmin = true; cleanUserName = u; currentUser = u + " (الأدمن) ⭐"; startApp();
+                document.getElementById('adminBar').style.display = 'flex';
             } else if (snap.exists() && snap.val().pass === p) {
-                if (snap.val().isBanned) return alert("عذراً، هذا الحساب محظور من قبل الإدارة.");
+                if (snap.val().isBanned) return alert("أنت محظور!");
                 cleanUserName = u; currentUser = u; startApp();
-            } else { alert("اسم المستخدم أو كلمة المرور غير صحيحة"); }
+            } else { alert("بيانات خاطئة"); }
         };
 
         document.getElementById('registerBtn').onclick = async () => {
             const u = document.getElementById('user-id').value.trim();
             const p = document.getElementById('user-pass').value.trim();
-            if(!u || !p) return alert("يرجى إدخال البيانات");
-            const check = await get(child(ref(db), `users/${u}`));
-            if(check.exists()) return alert("الاسم مأخوذ بالفعل");
-            
-            await set(ref(db, `users/${u}`), { pass: p, isBanned: false, status: "offline" });
-            alert("تم التسجيل بنجاح!");
-            document.getElementById('toggleAuth').click();
+            if(!u || !p) return;
+            await set(ref(db, `users/${u}`), { pass: p, isBanned: false, status: "offline", isTyping: false });
+            alert("تم التسجيل!"); document.getElementById('toggleAuth').click();
+        };
+
+        function formatTime(ts) {
+            const date = new Date(ts);
+            return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        const playSound = () => {
+            const sound = document.getElementById('msgSound');
+            sound.currentTime = 0;
+            sound.play().catch(() => {});
         };
 
         // --- تشغيل التطبيق ---
@@ -165,66 +184,83 @@
             document.getElementById('chat-app').style.display = 'flex';
             document.getElementById('user-tag').innerText = currentUser;
             
-            // تتبع الحالة (Online/Offline)
-            const userStatusRef = ref(db, `users/${cleanUserName}/status`);
-            onValue(ref(db, '.info/connected'), (snap) => {
-                if (snap.val() === true) {
-                    set(userStatusRef, "online");
-                    onDisconnect(userStatusRef).set("offline");
+            const typingRef = ref(db, `users/${cleanUserName}/isTyping`);
+            const statusRef = ref(db, `users/${cleanUserName}/status`);
+            
+            onValue(ref(db, '.info/connected'), (s) => {
+                if(s.val()) { 
+                    set(statusRef, "online"); 
+                    onDisconnect(statusRef).set("offline");
+                    onDisconnect(typingRef).set(false);
                 }
             });
 
-            // تتبع الحظر اللحظي (إذا تم حظره وهو داخل التطبيق)
-            onValue(ref(db, `users/${cleanUserName}/isBanned`), (snap) => {
-                if (snap.val() === true) {
-                    alert("لقد تم حظرك من قبل الأدمن!");
+            // التأكد من أن حسابي لا يزال موجوداً (لم يتم حذفه من قبل أدمن آخر)
+            onValue(ref(db, `users/${cleanUserName}`), (s) => {
+                if(!s.exists() && cleanUserName !== "") {
+                    alert("عذراً، هذا الحساب لم يعد موجوداً.");
                     location.reload();
                 }
             });
+
+            onValue(ref(db, `users/${cleanUserName}/isBanned`), (s) => {
+                if(s.val() === true) { alert("تم حظرك!"); location.reload(); }
+            });
+
+            onValue(ref(db, 'users'), (snap) => {
+                let someoneTyping = false;
+                snap.forEach(child => {
+                    if(child.key !== cleanUserName && child.val().isTyping === true && child.val().status === "online") {
+                        someoneTyping = true;
+                    }
+                });
+                document.getElementById('typing-indicator').style.display = someoneTyping ? 'block' : 'none';
+            });
+
+            let typingTimeout;
+            document.getElementById('tInp').oninput = () => {
+                set(typingRef, true);
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => set(typingRef, false), 2000);
+            };
 
             initChatListeners();
             initUserListListener();
         }
 
-        // --- وظائف الرسائل ---
         const sendMessage = (text, img = null) => {
             if(!text && !img) return;
             push(ref(db, 'messages'), {
-                sender: currentUser,
-                senderRaw: cleanUserName,
-                text: text,
-                image: img,
-                timestamp: Date.now()
+                sender: currentUser, senderRaw: cleanUserName,
+                text: text, image: img, timestamp: Date.now()
             });
             document.getElementById('tInp').value = "";
+            set(ref(db, `users/${cleanUserName}/isTyping`), false);
         };
 
         document.getElementById('sendBtn').onclick = () => sendMessage(document.getElementById('tInp').value.trim());
-        document.getElementById('tInp').onkeypress = (e) => { if(e.key === 'Enter') document.getElementById('sendBtn').click(); };
+        document.getElementById('tInp').onkeypress = (e) => { if(e.key==='Enter') document.getElementById('sendBtn').click(); };
 
         document.getElementById('fileInput').onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => sendMessage("[صورة]", ev.target.result);
-                reader.readAsDataURL(file);
-            }
+            const reader = new FileReader();
+            reader.onload = (ev) => sendMessage("[صورة]", ev.target.result);
+            reader.readAsDataURL(e.target.files[0]);
         };
 
         function initChatListeners() {
             const mRef = ref(db, 'messages');
-            
-            onChildAdded(mRef, (snap) => {
-                renderMessage(snap.key, snap.val());
+            let initialLoad = true;
+            onChildAdded(mRef, (s) => {
+                renderMessage(s.key, s.val());
+                if(!initialLoad && s.val().senderRaw !== cleanUserName) playSound();
             });
-
-            onChildChanged(mRef, (snap) => {
-                const el = document.getElementById(`msg-${snap.key}`);
-                if(el) el.querySelector('.msg-text').innerText = snap.val().text;
+            get(mRef).then(() => { initialLoad = false; });
+            onChildChanged(mRef, (s) => {
+                const el = document.getElementById(`msg-${s.key}`);
+                if(el) el.querySelector('.msg-text').innerText = s.val().text;
             });
-
-            onChildRemoved(mRef, (snap) => {
-                const el = document.getElementById(`msg-${snap.key}`);
+            onChildRemoved(mRef, (s) => {
+                const el = document.getElementById(`msg-${s.key}`);
                 if(el) el.remove();
             });
         }
@@ -235,91 +271,84 @@
             const div = document.createElement('div');
             div.id = `msg-${id}`;
             div.className = `bubble ${isMe ? 'sent' : 'received'}`;
-            
-            let imgHtml = data.image ? `<img src="${data.image}" class="chat-img">` : "";
-            
-            // أدوات الإدارة تظهر للأدمن فقط
-            let adminActions = isAdmin ? `
+            const timeStr = data.timestamp ? formatTime(data.timestamp) : '';
+
+            let adminTools = isAdmin ? `
                 <div class="admin-tools">
-                    <span onclick="window.deleteMessage('${id}')">🗑 حذف</span>
-                    <span onclick="window.editMessage('${id}', '${data.text}')">✏️ تعديل</span>
+                    <span onclick="window.delMsg('${id}')">🗑 حذف</span>
+                    <span onclick="window.editMsg('${id}', '${data.text}')">✏️ تعديل</span>
                 </div>` : "";
 
             div.innerHTML = `
                 <div style="font-size:10px; color:var(--main); font-weight:bold;">${data.sender}</div>
                 <div class="msg-text">${data.text}</div>
-                ${imgHtml}
-                ${adminActions}`;
-            
+                ${data.image ? `<img src="${data.image}" class="chat-img">` : ""}
+                <div class="msg-footer">
+                    <span style="font-size:9px; opacity:0.6;">${timeStr}</span>
+                    ${adminTools}
+                </div>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
 
-        // --- وظائف الأدمن (Global Window) ---
-        window.deleteMessage = (id) => {
-            if(confirm("هل أنت متأكد من حذف هذه الرسالة نهائياً؟")) {
-                remove(ref(db, `messages/${id}`));
+        // --- وظائف الأدمن العالمية ---
+        window.delMsg = (id) => { if(confirm("حذف الرسالة؟")) remove(ref(db, `messages/${id}`)); };
+        window.editMsg = (id, old) => {
+            const n = prompt("تعديل الرسالة:", old);
+            if(n) update(ref(db, `messages/${id}`), { text: n });
+        };
+        window.clearAllMessages = () => {
+            if(confirm("⚠️ هل أنت متأكد من مسح كافة الرسائل للجميع؟")) remove(ref(db, 'messages'));
+        };
+        window.toggleBan = async (u, status) => {
+            if(confirm(`${status ? 'إلغاء حظر' : 'حظر'} ${u}؟`)) {
+                await update(ref(db, `users/${u}`), { isBanned: !status });
+            }
+        };
+        // الميزة الجديدة: حذف الحساب
+        window.deleteUser = async (u) => {
+            if(confirm(`⚠️ تحذير: هل أنت متأكد من حذف حساب (${u}) نهائياً؟ سيتم طرده فوراً.`)) {
+                await remove(ref(db, `users/${u}`));
+                alert(`تم حذف الحساب ${u} بنجاح.`);
             }
         };
 
-        window.editMessage = (id, oldText) => {
-            const newText = prompt("تعديل الرسالة:", oldText);
-            if(newText !== null) {
-                update(ref(db, `messages/${id}`), { text: newText });
-            }
-        };
-
-        window.toggleBan = async (username, currentStatus) => {
-            const action = currentStatus ? "إلغاء حظر" : "حظر";
-            if(confirm(`هل تريد ${action} المستخدم: ${username}؟`)) {
-                await update(ref(db, `users/${username}`), { isBanned: !currentStatus });
-                alert(`تم ${action} بنجاح`);
-            }
-        };
-
-        // --- تحديث قائمة المستخدمين ---
         function initUserListListener() {
             onValue(ref(db, 'users'), (snap) => {
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
                 snap.forEach(c => {
-                    const u = c.key;
-                    const data = c.val();
-                    const isOnline = data.status === "online";
-                    
+                    const u = c.key; const d = c.val();
+                    const isOnline = d.status === "online";
                     const div = document.createElement('div');
                     div.className = 'user-item';
                     
-                    let banBtn = (isAdmin && u !== cleanUserName) ? 
-                        `<button class="${data.isBanned ? 'unban-btn' : 'ban-btn'}" onclick="window.toggleBan('${u}', ${data.isBanned})">
-                            ${data.isBanned ? 'إلغاء حظر' : 'حظر / طرد'}
-                        </button>` : "";
+                    let adminButtons = (isAdmin && u !== cleanUserName) ? `
+                        <div class="btn-group">
+                            <button class="${d.isBanned ? 'unban-btn' : 'ban-btn'}" onclick="window.toggleBan('${u}', ${d.isBanned})">
+                                ${d.isBanned ? 'فك حظر' : 'حظر'}
+                            </button>
+                            <button class="delete-user-btn" onclick="window.deleteUser('${u}')">حذف نهائي</button>
+                        </div>` : "";
 
                     div.innerHTML = `
                         <div class="status-dot ${isOnline ? 'status-online' : ''}"></div>
                         <div style="flex:1">
-                            <div>${u} ${data.isBanned ? '<span class="banned-text">(محظور)</span>' : ''}</div>
-                            <small style="font-size:9px; color:#999">${isOnline ? 'متصل الآن' : 'غير متصل'}</small>
+                            <div style="${d.isBanned ? 'color:red;' : ''}">${u} ${d.isBanned ? '(محظور)' : ''}</div>
+                            <small style="color:#999">${isOnline ? 'نشط' : 'غير متصل'}</small>
                         </div>
-                        ${banBtn}
+                        ${adminButtons}
                     `;
                     list.appendChild(div);
                 });
             });
         }
 
-        // --- أزرار الواجهة ---
-        document.getElementById('menuBtn').onclick = () => {
-            document.getElementById('sidebar').classList.add('active');
-            document.getElementById('overlay').classList.add('active');
-        };
-        document.getElementById('overlay').onclick = () => {
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
-        };
-        document.getElementById('logoutBtn').onclick = async () => {
-            if(cleanUserName) await set(ref(db, `users/${cleanUserName}/status`), "offline");
-            location.reload();
+        document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('active'); document.getElementById('overlay').classList.add('active'); };
+        document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        document.getElementById('logoutBtn').onclick = async () => { 
+            if(cleanUserName) await update(ref(db, `users/${cleanUserName}`), { status: "offline", isTyping: false });
+            location.reload(); 
         };
     </script>
 </body>
