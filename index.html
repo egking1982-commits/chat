@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d63384">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5962/5962463.png">
+
     <title>ملتقى الاصدقاء 2026 - الإصدار الاحترافي</title>
     
     <style>
@@ -59,7 +66,8 @@
         .input-area { background: white; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #eee; min-height: var(--input-h); padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
         .msg-input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 16px; outline: none; }
         #sendBtn { background: var(--main); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .voice-rec-btn { background: #28a745; color: white; width: 45px; height: 45px; border-radius: 50%; border: none; display: none; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.3s; }
+        
+        .voice-rec-btn { background: #28a745; color: white; width: 45px; height: 45px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.3s; flex-shrink: 0; }
         .recording { background: #ff4444 !important; animation: pulse 1s infinite; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -141,6 +149,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded, set, get, child, remove, update, onValue, onDisconnect, onChildChanged, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // تم الحفاظ على إعداداتك الأصلية بالكامل
         const firebaseConfig = {
             apiKey: "AIzaSyAQoBgXB_Iq0Ga_UmJkwifQ7kqbHF1FGPY",
             authDomain: "chat-8fc29.firebaseapp.com",
@@ -169,7 +178,6 @@
             if (p === "2026") { 
                 isAdmin = true; cleanUserName = u; currentUser = u + " (الأدمن) ⭐"; startApp();
                 document.getElementById('adminBar').style.display = 'flex';
-                document.getElementById('voiceBtn').style.display = 'flex';
             } else if (snap.exists() && snap.val().pass === p) {
                 if (snap.val().isBanned) return alert("أنت محظور!");
                 cleanUserName = u; currentUser = u; startApp();
@@ -190,7 +198,6 @@
             document.getElementById('registerBtn').style.display = isLogin ? 'block' : 'none';
         };
 
-        // --- بدء التطبيق ---
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('chat-app').style.display = 'flex';
@@ -225,9 +232,7 @@
             };
         }
 
-        // --- مزامنة الخلفية ---
         function setupBackgroundSync() {
-            // الاستماع لتغييرات الخلفية في قاعدة البيانات
             onValue(ref(db, `backgrounds/${cleanUserName}`), (snap) => {
                 if(snap.exists()) document.getElementById('chatBox').style.backgroundImage = `url(${snap.val()})`;
             });
@@ -236,9 +241,7 @@
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     const data = ev.target.result;
-                    // حفظ الخلفية لنفسي
                     set(ref(db, `backgrounds/${cleanUserName}`), data);
-                    // إذا كنت في محادثة خاصة، ارسل الخلفية للطرف الآخر أيضاً
                     if(pTarget) set(ref(db, `backgrounds/${pTarget}`), data);
                 };
                 reader.readAsDataURL(e.target.files[0]);
@@ -250,7 +253,6 @@
             document.getElementById('muteSetter').onchange = (e) => { isMuted = e.target.checked; };
         }
 
-        // --- إرسال الرسائل ---
         const sendMessage = (text, img = null, voice = null) => {
             if(!text && !img && !voice) return;
             push(ref(db, 'messages'), {
@@ -267,11 +269,9 @@
         document.getElementById('sendBtn').onclick = () => sendMessage(document.getElementById('tInp').value.trim());
         document.getElementById('tInp').onkeypress = (e) => { if(e.key === 'Enter') document.getElementById('sendBtn').click(); };
 
-        // --- تسجيل الفويس (نقرة للبدء ونقرة للانتهاء) ---
         document.getElementById('voiceBtn').onclick = async function() {
             const btn = this;
             if(!isRecording) {
-                // بدء التسجيل
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRec = new MediaRecorder(stream);
@@ -282,14 +282,16 @@
                         const reader = new FileReader();
                         reader.onload = e => sendMessage(null, null, e.target.result);
                         reader.readAsDataURL(blob);
+                        stream.getTracks().forEach(track => track.stop());
                     };
                     mediaRec.start();
                     isRecording = true;
                     btn.classList.add('recording');
                     btn.innerText = "🛑";
-                } catch(e) { alert("يرجى السماح بالوصول للميكروفون"); }
+                } catch(e) { 
+                    alert("لا يمكن الوصول للميكروفون."); 
+                }
             } else {
-                // إنهاء التسجيل
                 mediaRec.stop();
                 isRecording = false;
                 btn.classList.remove('recording');
@@ -297,7 +299,6 @@
             }
         };
 
-        // --- المحادثة الخاصة ---
         window.startPrivate = (user) => {
             if(user === cleanUserName) return;
             pTarget = user;
@@ -307,7 +308,6 @@
         };
         window.cancelPrivate = () => { pTarget = null; document.getElementById('private-indicator').style.display = 'none'; };
 
-        // --- مستمعي الدردشة ---
         function initChatListeners() {
             const mRef = ref(db, 'messages');
             onChildAdded(mRef, (s) => {
@@ -319,7 +319,7 @@
             });
             onChildChanged(mRef, (s) => {
                 const el = document.getElementById(`msg-${s.key}`);
-                if(el) el.querySelector('.msg-text').innerText = s.val().text;
+                if(el && s.val().text) el.querySelector('.msg-text').innerText = s.val().text;
             });
             onChildRemoved(mRef, (s) => {
                 const el = document.getElementById(`msg-${s.key}`);
@@ -352,7 +352,6 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // --- الإدارة والمستخدمين ---
         window.delMsg = (id) => { if(confirm("حذف الرسالة؟")) remove(ref(db, `messages/${id}`)); };
         window.editMsg = (id, old) => {
             const n = prompt("تعديل الرسالة:", old);
@@ -394,7 +393,15 @@
         document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('active'); document.getElementById('overlay').classList.add('active'); };
         document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
         document.getElementById('logoutBtn').onclick = () => location.reload();
+
+        // 2. تسجيل نظام الخدمة (Service Worker) لبيئة الأندرويد
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('SW Registered');
+                }).catch(err => console.log('SW Registration failed', err));
+            });
+        }
     </script>
 </body>
 </html>
-
